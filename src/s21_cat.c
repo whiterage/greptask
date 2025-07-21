@@ -139,33 +139,19 @@ void cat_function(const char *filename, bool flag_n, bool flag_b, bool flag_s, b
 }
 
 int main(int argc, char *argv[]) {
-    bool flag_n = false, flag_b = false, flag_s = false, flag_t = false, flag_e = false;
-
-    for (int i = 1; i < argc;) {
-        if (strcmp(argv[i], "-n") == 0) {
-            flag_n = true;
-        } else if (strcmp(argv[i], "-b") == 0) {
-            flag_b = true;
-        } else if (strcmp(argv[i], "-s") == 0) {
-            flag_s = true;
-        } else if (strcmp(argv[i], "-t") == 0) {
-            flag_t = true;
-        } else if (strcmp(argv[i], "-e") == 0) {
-            flag_e = true;
-        } else {
-            i++;
-            continue;
-        }
-
-        for (int j = i; j < argc - 1; j++) {
-            argv[j] = argv[j + 1];
-        }
-        argc--;
-    }
-
     if (argc < 2) {
         printf("неверный формат ввода\n");
         return 1;
+    }
+
+    bool flag_n = check_flag_n(&argc, argv);
+    bool flag_b = check_flag_b(&argc, argv);
+    bool flag_s = check_flag_s(&argc, argv);
+    bool flag_t = check_flag_t(&argc, argv);
+    bool flag_e = check_flag_e(&argc, argv);
+
+    if (flag_b) {
+        flag_n = false;
     }
 
     for (int i = 1; i < argc; i++) {
