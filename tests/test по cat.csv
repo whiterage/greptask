@@ -1,0 +1,13 @@
+Описание теста
+
+Обычный вывод без флагов,./s21_cat data/cat.txt
+Флаг -n (нумерация всех строк),./s21_cat -n data/cat.txt
+Флаг -b (нумерация непустых строк),./s21_cat -b data/cat.txt
+Флаг -s (удаление повторяющихся пустых строк),./s21_cat -s data/cat.txt
+Флаг -t (табуляция заменяется ^I),./s21_cat -t data/cat.txt
+Флаг -e (в конце строки $),./s21_cat -e data/cat.txt
+Флаги -n -s,./s21_cat -n -s data/cat.txt
+Флаги -b -s,./s21_cat -b -s data/cat.txt
+Флаги -b -t,./s21_cat -b -t data/cat.txt
+Флаги -n -e,./s21_cat -n -e data/cat.txt
+Все флаги -n -b -s -t -e,./s21_cat -n -b -s -t -e data/cat.txt
