@@ -3,96 +3,51 @@
 #include <stdlib.h>
 #include <string.h>
 
-bool check_flag_e(int *argc, char *argv[]) {
-    for (int i = 1; i < *argc; i++) {
-        if (strcmp(argv[i], "-n") == 0 || strcmp(argv[i], "-b") == 0 ||
-            strcmp(argv[i], "-s") == 0 || strcmp(argv[i], "-t") == 0) {
-            continue;
-        }
+typedef struct {
+    bool n;
+    bool b;
+    bool s;
+    bool t;
+    bool e;
+} CatFlags;
 
-        if (strcmp(argv[i], "-e") == 0) {
-            for (int j = i; j < *argc - 1; j++) {
-                argv[j] = argv[j + 1];
-            }
-            (*argc)--;
-            return true;
-        }
-    }
-    return false;
-}
+CatFlags parse_flags(int *argc, char *argv[]) {
+    CatFlags flags = {false, false, false, false, false};
 
-bool check_flag_t(int *argc, char *argv[]) {
-    for (int i = 1; i < *argc; i++) {
-        if (strcmp(argv[i], "-n") == 0 || strcmp(argv[i], "-b") == 0 ||
-            strcmp(argv[i], "-s") == 0) {
-            continue;
-        }
-
-        if (strcmp(argv[i], "-t") == 0) {
-            for (int j = i; j < *argc - 1; j++) {
-                argv[j] = argv[j + 1];
-            }
-            (*argc)--;
-            return true;
-        }
-    }
-
-    return false;
-}
-
-bool check_flag_s(int *argc, char *argv[]) {
-    for (int i = 1; i < *argc; i++) {
-        if (strcmp(argv[i], "-n") == 0 || strcmp(argv[i], "-b") == 0) {
-            continue;
-        }
-
-        if (strcmp(argv[i], "-s") == 0) {
-            for (int j = i; j < *argc - 1; j++) {
-                argv[j] = argv[j + 1];
-            }
-            (*argc)--;
-            return true;
-        }
-    }
-
-    return false;
-}
-
-bool check_flag_b(int *argc, char *argv[]) {
-    for (int i = 1; i < *argc; i++) {
+    for (int i = 1; i < *argc;) {
         if (strcmp(argv[i], "-n") == 0) {
+            flags.n = true;
+        } else if (strcmp(argv[i], "-b") == 0) {
+            flags.b = true;
+        } else if (strcmp(argv[i], "-s") == 0) {
+            flags.s = true;
+        } else if (strcmp(argv[i], "-t") == 0) {
+            flags.t = true;
+        } else if (strcmp(argv[i], "-e") == 0) {
+            flags.e = true;
+        } else {
+            i++;
             continue;
         }
 
-        if (strcmp(argv[i], "-b") == 0) {
-            for (int j = i; j < *argc - 1; j++) {
-                argv[j] = argv[j + 1];
-            }
-            (*argc)--;
-            return true;
+        for (int j = i; j < *argc - 1; j++) {
+            argv[j] = argv[j + 1];
         }
+        (*argc)--;
     }
-    return false;
+
+    if (flags.b) {
+        flags.n = false;
+    }
+
+    return flags;
 }
 
-bool check_flag_n(int *argc, char *argv[]) {
-    for (int i = 1; i < *argc; i++) {
-        if (strcmp(argv[i], "-n") == 0) {
-            for (int j = i; j < *argc - 1; j++) {
-                argv[j] = argv[j + 1];
-            }
-            (*argc)--;
-            return true;
-        }
-    }
-    return false;
-}
-
-void flag_t_func(const char *line, bool flag_e) {
+void flag_t_func(const char *line, CatFlags flags) {
     for (int i = 0; line[i] != '\0'; i++) {
-        if (line[i] == '\t') {
+        if (flags.t && line[i] == '\t') {
             printf("^I");
-        } else if (line[i] == '\n' && flag_e) {
+        } else if (line[i] == '\n' && flags.e) {
             printf("$\n");
         } else {
             putchar(line[i]);
@@ -100,8 +55,7 @@ void flag_t_func(const char *line, bool flag_e) {
     }
 }
 
-void cat_function(const char *filename, bool flag_n, bool flag_b, bool flag_s, bool flag_t,
-                  bool flag_e) {
+void cat_function(const char *filename, CatFlags flags) {
     FILE *file = fopen(filename, "r");
     if (file == NULL) {
         printf("Файл не найден: %s\n", filename);
@@ -113,7 +67,7 @@ void cat_function(const char *filename, bool flag_n, bool flag_b, bool flag_s, b
     bool prev_empty = false;
 
     while (fgets(line, sizeof(line), file)) {
-        if (flag_s && strcmp(line, "\n") == 0) {
+        if (flags.s && strcmp(line, "\n") == 0) {
             if (prev_empty) {
                 continue;
             }
@@ -122,14 +76,14 @@ void cat_function(const char *filename, bool flag_n, bool flag_b, bool flag_s, b
             prev_empty = false;
         }
 
-        if (flag_b && strcmp(line, "\n") != 0) {
+        if (flags.b && strcmp(line, "\n") != 0) {
             printf("%6d\t", line_number++);
-        } else if (flag_n && !flag_b) {
+        } else if (flags.n && !flags.b) {
             printf("%6d\t", line_number++);
         }
 
-        if (flag_t || flag_e) {
-            flag_t_func(line, flag_e);
+        if (flags.t || flags.e) {
+            flag_t_func(line, flags);
         } else {
             printf("%s", line);
         }
@@ -144,18 +98,10 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    bool flag_n = check_flag_n(&argc, argv);
-    bool flag_b = check_flag_b(&argc, argv);
-    bool flag_s = check_flag_s(&argc, argv);
-    bool flag_t = check_flag_t(&argc, argv);
-    bool flag_e = check_flag_e(&argc, argv);
-
-    if (flag_b) {
-        flag_n = false;
-    }
+    CatFlags flags = parse_flags(&argc, argv);
 
     for (int i = 1; i < argc; i++) {
-        cat_function(argv[i], flag_n, flag_b, flag_s, flag_t, flag_e);
+        cat_function(argv[i], flags);
     }
 
     return 0;
