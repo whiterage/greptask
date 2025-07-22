@@ -3,10 +3,12 @@
 #include <string.h>
 #include <strings.h>
 
-#include "s21_grep.h"
+typedef struct {
+    bool i, v, c, l, n;
+} GrepFlags;
 
 GrepFlags parse_flags(int *argc, char *argv[]) {
-    GrepFlags flags = {false, false, false};
+    GrepFlags flags = {false, false, false, false, false};
 
     for (int i = 1; i < *argc;) {
         if (strcmp(argv[i], "-i") == 0) {
@@ -15,6 +17,10 @@ GrepFlags parse_flags(int *argc, char *argv[]) {
             flags.v = true;
         } else if (strcmp(argv[i], "-c") == 0) {
             flags.c = true;
+        } else if (strcmp(argv[i], "-l") == 0) {
+            flags.l = true;
+        } else if (strcmp(argv[i], "-n") == 0) {
+            flags.n = true;
         } else {
             i++;
             continue;
@@ -31,7 +37,6 @@ GrepFlags parse_flags(int *argc, char *argv[]) {
 
 void grep_func(const char *pattern, const char *filename, GrepFlags flags) {
     FILE *file = fopen(filename, "r");
-
     if (file == NULL) {
         printf("Файл %s не найден\n", filename);
         return;
@@ -39,12 +44,24 @@ void grep_func(const char *pattern, const char *filename, GrepFlags flags) {
 
     char line[256];
     int count = 0;
+    int line_number = 0;
+
     while (fgets(line, sizeof(line), file)) {
+        line_number++;
         char *found = flags.i ? strcasestr(line, pattern) : strstr(line, pattern);
 
         if ((flags.v && !found) || (!flags.v && found)) {
             count++;
+
+            if (flags.l) {
+                printf("%s\n", filename);
+                break;
+            }
+
             if (!flags.c) {
+                if (flags.n) {
+                    printf("%d:", line_number);
+                }
                 printf("%s", line);
             }
         }
