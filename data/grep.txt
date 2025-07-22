@@ -1,16 +1,6 @@
-Привет, мир!
-Это строка с КОТом
-Это строка с котом
-котёнок сидит на окне
-СОБАКА — лучший друг
-Я люблю bash и grep
-grep это круто
-GREP реально мощный
-пустая
-
-ещё одна пустая строка выше
-
-кот кот кот
-
-строка без совпадений
-Вот ещё одна строка с котом и собакой
+This is a test line with the word Cat.
+Here is another line with the word DOG.
+A third line mentioning a cat again.
+DOGS are loyal animals.
+The word cAt appears in different casing.
+Nothing interesting here.

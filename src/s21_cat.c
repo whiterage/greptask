@@ -4,11 +4,7 @@
 #include <string.h>
 
 typedef struct {
-    bool n;
-    bool b;
-    bool s;
-    bool t;
-    bool e;
+    bool n, b, s, t, e;
 } CatFlags;
 
 CatFlags parse_flags(int *argc, char *argv[]) {
