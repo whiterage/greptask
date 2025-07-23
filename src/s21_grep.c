@@ -4,41 +4,64 @@
 #include <strings.h>
 
 typedef struct {
-    bool i, v, c, l, n;
+    bool i, v, c, l, n, h, s, o;
 } GrepFlags;
 
 GrepFlags parse_flags(int *argc, char *argv[]) {
-    GrepFlags flags = {false, false, false, false, false};
+    GrepFlags flags = {false};
 
     for (int i = 1; i < *argc;) {
-        if (strcmp(argv[i], "-i") == 0) {
-            flags.i = true;
-        } else if (strcmp(argv[i], "-v") == 0) {
-            flags.v = true;
-        } else if (strcmp(argv[i], "-c") == 0) {
-            flags.c = true;
-        } else if (strcmp(argv[i], "-l") == 0) {
-            flags.l = true;
-        } else if (strcmp(argv[i], "-n") == 0) {
-            flags.n = true;
+        if (argv[i][0] == '-' && argv[i][1] != '\0') {
+            for (int j = 1; argv[i][j] != '\0'; j++) {
+                switch (argv[i][j]) {
+                    case 'i':
+                        flags.i = true;
+                        break;
+                    case 'v':
+                        flags.v = true;
+                        break;
+                    case 'c':
+                        flags.c = true;
+                        break;
+                    case 'l':
+                        flags.l = true;
+                        break;
+                    case 'n':
+                        flags.n = true;
+                        break;
+                    case 'h':
+                        flags.h = true;
+                        break;
+                    case 's':
+                        flags.s = true;
+                        break;
+                    case 'o':
+                        flags.o = true;
+                        break;
+                    default:
+                        fprintf(stderr, "Unknown flag: -%c\n", argv[i][j]);
+                        break;
+                }
+            }
+
+            for (int k = i; k < *argc - 1; k++) {
+                argv[k] = argv[k + 1];
+            }
+            (*argc)--;
         } else {
             i++;
-            continue;
         }
-
-        for (int j = i; j < *argc - 1; j++) {
-            argv[j] = argv[j + 1];
-        }
-        (*argc)--;
     }
 
     return flags;
 }
 
-void grep_func(const char *pattern, const char *filename, GrepFlags flags) {
+void grep_func(const char *pattern, const char *filename, GrepFlags flags, bool mult_files) {
     FILE *file = fopen(filename, "r");
     if (file == NULL) {
-        printf("Файл %s не найден\n", filename);
+        if (!flags.s) {
+            printf("Файл %s не найден\n", filename);
+        }
         return;
     }
 
@@ -50,6 +73,16 @@ void grep_func(const char *pattern, const char *filename, GrepFlags flags) {
         line_number++;
         char *found = flags.i ? strcasestr(line, pattern) : strstr(line, pattern);
 
+        if ((flags.o && found)) {
+            char *start = line;
+            while ((start = (flags.i ? strcasestr(start, pattern) : strstr(start, pattern))) !=
+                   NULL) {
+                printf("%.*s\n", (int)strlen(pattern), start);
+                start += strlen(pattern);
+            }
+            continue;
+        }
+
         if ((flags.v && !found) || (!flags.v && found)) {
             count++;
 
@@ -59,6 +92,9 @@ void grep_func(const char *pattern, const char *filename, GrepFlags flags) {
             }
 
             if (!flags.c) {
+                if (!flags.h && mult_files) {
+                    printf("%s:%s", filename, line);
+                }
                 if (flags.n) {
                     printf("%d:", line_number);
                 }
@@ -81,9 +117,16 @@ int main(int argc, char *argv[]) {
     }
 
     GrepFlags flags = parse_flags(&argc, argv);
-    const char *pattern = argv[argc - 2];
-    const char *filename = argv[argc - 1];
 
-    grep_func(pattern, filename, flags);
+    const char *pattern = argv[1];
+
+    int file_start = 2;
+    int file_count = argc - file_start;
+    bool mult_files = file_count > 1;
+
+    for (int i = file_start; i < argc; i++) {
+        grep_func(pattern, argv[i], flags, mult_files);
+    }
+
     return 0;
 }
